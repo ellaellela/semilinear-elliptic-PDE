@@ -1,6 +1,7 @@
-# Numericla solution of mixed boundary problem for semilinear elliptic PDEs
+# Numerical solution of mixed boundary problem for semilinear elliptic PDEs
 
-** Welcome **
+**Welcome**
+
 This a part of the code to reproduce the numerical results from the article:
 
 - M. Misur: On the mixed boundary value problem for semilinear elliptic equations, Mathematics and Computers in Simulation 179 (2021) 162-177
