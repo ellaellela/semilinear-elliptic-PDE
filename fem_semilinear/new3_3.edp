@@ -1,0 +1,159 @@
+// domain is unit disc
+
+int  num = 40; // for discretisation
+func f = x^2+y^2; // part of nonlinear function without u and grad u
+real mu = 10.;
+func ue = 0.;
+
+border N(t=0,pi) { x=cos(t); y=sin(t); label=1;};
+border D(t=pi,2*pi){ x=cos(t);y=sin(t); label=2;};
+
+//======================================
+mesh T0h = buildmesh(N(num)+D(num));
+//plot(T0h,wait=true);
+fespace V0h(T0h,P1);
+V0h u0, v0, u0old = 1.;
+
+problem Poisson0(u0,v0) =
+	int2d(T0h)( dx(u0)*dx(v0) + dy(u0)*dy(v0) + mu*u0*v0 ) // bilinear form
+	- int2d(T0h)( (f+log(1+abs(u0old)))*v0 ) // linear form
+	+ on(2,u0=ue) ; // boundary condition
+	
+for(int m=0; m<7;++m){
+	Poisson0;
+	//plot(u0,wait=true, value=true);
+	V0h ERR = u0-u0old;
+	real L2error0 = sqrt( int2d(T0h)( ERR^2 ) );
+	real H1error0 = sqrt( int2d(T0h)( dx(ERR)^2 + dy(ERR)^2 + ERR^2 ) );
+	cout <<"L2 error: "<< L2error0 <<" relative L2error: "<< L2error0/sqrt( (int2d(T0h)(u0^2)) )<<endl;
+	cout <<"H1 error: "<< H1error0 <<" relative H1error: "<< H1error0/sqrt( (int2d(T0h)(dx(u0)^2 + dy(u0)^2 + u0^2)) )<<endl;
+	u0old=u0;
+	}	
+
+plot(u0,wait=true,value=true);
+
+//========================================
+num= num*2;
+mesh Th1 = buildmesh(N(num)+D(num));
+fespace Vh1(Th1, P1);
+Vh1 u1, v1, u1old=1.;
+
+problem Poisson1(u1,v1) =
+	int2d(Th1)( dx(u1)*dx(v1) + dy(u1)*dy(v1) + mu*u1*v1 ) // bilinear form
+	- int2d(Th1)( (f+log(1+abs(u1old)))*v1 ) // linear form
+	+ on(2,u1=ue) ; // boundary condition
+
+for(int m=0; m<7;++m){
+	Poisson1;
+	//plot(u1,wait=true, value=true);
+	Vh1 ERR = u1-u1old;
+	real L2error0 = sqrt( int2d(Th1)( ERR^2 ) );
+	real H1error0 = sqrt( int2d(Th1)( dx(ERR)^2 + dy(ERR)^2 + ERR^2 ) );
+	cout <<"L2 error: "<< L2error0 <<" relative L2error: "<< L2error0/sqrt( (int2d(Th1)(u0^2)) )<<endl;
+	cout <<"H1 error: "<< H1error0 <<" relative H1error: "<< H1error0/sqrt( (int2d(Th1)(dx(u0)^2 + dy(u0)^2 + u0^2)) )<<endl;
+	u1old=u1;
+	}
+	
+plot(u1,wait=true,value=true);
+
+Vh1 error1 = u1-u0;
+plot(error1,wait=true,value=true);
+
+real L2error1 = sqrt( int2d(Th1)( error1^2 ) );
+real H1error1 = sqrt( int2d(Th1)( dx(error1)^2 + dy(error1)^2 + error1^2 ) );
+cout <<"L2 error on finer mesh: "<< L2error1 <<" relative L2error: "<< L2error1/sqrt( (int2d(Th1)(u1^2)) )<<endl;
+cout <<"H1 error on finer mesh: "<< H1error1 <<" relative H1error: "<< H1error1/sqrt( (int2d(Th1)(dx(u1)^2 + dy(u1)^2 + u1^2)) )<<endl;
+
+//================================================================
+num= num*2;
+mesh Th2 = buildmesh(N(num)+D(num));
+fespace Vh2(Th2, P1);
+Vh2 u2, v2, u2old=1.;
+
+problem Poisson2(u2,v2) =
+	int2d(Th2)( dx(u2)*dx(v2) + dy(u2)*dy(v2) + mu*u2*v2 ) // bilinear form
+	- int2d(Th2)( (f+log(1+abs(u2old)))*v2 ) // linear form
+	+ on(2,u2=ue) ; // boundary condition
+
+for(int m=0; m<7;++m){
+	Poisson2;
+	//plot(u2,wait=true, value=true);
+	Vh2 ERR = u2-u2old;
+	real L2error0 = sqrt( int2d(Th2)( ERR^2 ) );
+	real H1error0 = sqrt( int2d(Th2)( dx(ERR)^2 + dy(ERR)^2 + ERR^2 ) );
+	cout <<"L2 error: "<< L2error0 <<" relative L2error: "<< L2error0/sqrt( (int2d(Th2)(u2^2)) )<<endl;
+	cout <<"H1 error: "<< H1error0 <<" relative H1error: "<< H1error0/sqrt( (int2d(Th2)(dx(u2)^2 + dy(u2)^2 + u2^2)) )<<endl;
+	u2old=u2;
+	}
+plot(u2,wait=true,value=true);
+
+Vh2 error2 = u2-u1;
+plot(error2,wait=true,value=true);
+
+real L2error2 = sqrt( int2d(Th2)( error2^2 ) );
+real H1error2 = sqrt( int2d(Th2)( dx(error2)^2 + dy(error2)^2 + error2^2 ) );
+cout <<"L2 error on finer mesh: "<< L2error2 <<" relative L2error: "<< L2error2/sqrt( (int2d(Th2)(u2^2)) )<<endl;
+cout <<"H1 error on finer mesh: "<< H1error2 <<" relative H1error: "<< H1error2/sqrt( (int2d(Th2)(dx(u2)^2 + dy(u2)^2 + u2^2)) )<<endl;
+
+//================================================================
+num= num*2;
+mesh Th3 = buildmesh(N(num)+D(num));
+fespace Vh3(Th3, P1);
+Vh3 u3, v3, u3old= 1.;
+
+problem Poisson3(u3,v3) =
+	int2d(Th3)( dx(u3)*dx(v3) + dy(u3)*dy(v3) + mu*u3*v3 ) // bilinear form
+	- int2d(Th3)( (f+log(1+abs(u3old)))*v3 ) // linear form
+	+ on(2,u3=ue) ; // boundary condition
+
+for(int m=0; m<7;++m){
+	Poisson3;
+	//plot(u3,wait=true, value=true);
+	Vh3 ERR = u3-u3old;
+	real L2error0 = sqrt( int2d(Th3)( ERR^2 ) );
+	real H1error0 = sqrt( int2d(Th3)( dx(ERR)^2 + dy(ERR)^2 + ERR^2 ) );
+	cout <<"L2 error: "<< L2error0 <<" relative L2error: "<< L2error0/sqrt( (int2d(Th3)(u3^2)) )<<endl;
+	cout <<"H1 error: "<< H1error0 <<" relative H1error: "<< H1error0/sqrt( (int2d(Th3)(dx(u3)^2 + dy(u3)^2 + u3^2)) )<<endl;
+	u3old=u3;
+	}
+plot(u3,wait=true,value=true);
+
+Vh3 error3 = u3-u2;
+plot(error3,wait=true,value=true);
+
+real L2error3 = sqrt( int2d(Th3)( error3^2 ) );
+real H1error3 = sqrt( int2d(Th3)( dx(error3)^2 + dy(error3)^2 + error3^2 ) );
+cout <<"L2 error on finer mesh: "<< L2error3 <<" relative L2error: "<< L2error3/sqrt( (int2d(Th3)(u3^2)) )<<endl;
+cout <<"H1 error on finer mesh: "<< H1error3 <<" relative H1error: "<< H1error3/sqrt( (int2d(Th3)(dx(u3)^2 + dy(u3)^2 + u3^2)) )<<endl;
+
+//================================================================
+num= num*2;
+mesh Th4 = buildmesh(N(num)+D(num));
+fespace Vh4(Th4, P1);
+Vh4 u4, v4, u4old=1.;
+
+problem Poisson4(u4,v4) =
+	int2d(Th4)( dx(u4)*dx(v4) + dy(u4)*dy(v4) + mu*u4*v4 ) // bilinear form
+	- int2d(Th4)( (f+log(1+abs(u4old)))*v4 ) // linear form
+	+ on(2,u4=ue) ; // boundary condition
+
+for(int m=0; m<7;++m){
+	Poisson4;
+	//plot(u4,wait=true, value=true);
+	Vh4 ERR = u4-u4old;
+	real L2error0 = sqrt( int2d(Th4)( ERR^2 ) );
+	real H1error0 = sqrt( int2d(Th4)( dx(ERR)^2 + dy(ERR)^2 + ERR^2 ) );
+	cout <<"L2 error: "<< L2error0 <<" relative L2error: "<< L2error0/sqrt( (int2d(Th4)(u4^2)) )<<endl;
+	cout <<"H1 error: "<< H1error0 <<" relative H1error: "<< H1error0/sqrt( (int2d(Th4)(dx(u4)^2 + dy(u4)^2 + u4^2)) )<<endl;
+	u4old=u4;
+	}
+plot(u4,wait=true,value=true);
+
+Vh4 error4 = u4-u3;
+plot(error4,wait=true,value=true);
+
+real L2error4 = sqrt( int2d(Th4)( error4^2 ) );
+real H1error4 = sqrt( int2d(Th4)( dx(error4)^2 + dy(error4)^2 + error4^2 ) );
+cout <<"L2 error on finer mesh: "<< L2error4 <<" relative L2error: "<< L2error4/sqrt( (int2d(Th4)(u4^2)) )<<endl;
+cout <<"H1 error on finer mesh: "<< H1error4 <<" relative H1error: "<< H1error4/sqrt( (int2d(Th4)(dx(u4)^2 + dy(u4)^2 + u4^2)) )<<endl;
+
