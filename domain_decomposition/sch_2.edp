@@ -1,0 +1,45 @@
+// domain is a disk
+
+int  num = 40; // for discretisation
+func f = x^2+y^2; // part of nonlinear function without u and grad u
+real mu = 10.;
+func ue = 0.;
+
+border N(t=0,pi) { x=cos(t); y=sin(t); label=1;};
+border D(t=pi,2*pi){ x=cos(t);y=sin(t); label=2;};
+border E1(t=-1,1) { x=t; y=0; label=inside;};
+border E2(t=-1,1) { x=-t; y=0; label=inside;};
+
+//======================================
+mesh T0hN = buildmesh(N(num)+E1(num));
+mesh T0hD = buildmesh(D(num)+E2(num));
+fespace V0hN(T0hN,P1);
+V0hN u0N, v0N, u0oldN=1.;
+fespace V0hD(T0hD,P1);
+V0hD u0D, v0D, u0oldD=1., lambda = 0.;
+
+problem Poisson0D(u0D,v0D) =
+	int2d(T0hD)( dx(u0D)*dx(v0D) + dy(u0D)*dy(v0D) + mu*u0D*v0D ) // bilinear form
+	- int2d(T0hD)( (f+log(1+abs(u0oldD))+abs(dx(u0oldD)) + abs(dy(u0oldD)))*v0D ) // linear form
+	+ int1d(T0hD,inside)(-lambda*v0D) + on(2,u0D=ue) ; // boundary condition
+	
+problem Poisson0N(u0N,v0N) =
+	int2d(T0hN)( dx(u0N)*dx(v0N) + dy(u0N)*dy(v0N) + mu*u0N*v0N ) // bilinear form
+	- int2d(T0hN)( (f+log(1+abs(u0oldN))+abs(dx(u0oldN)) + abs(dy(u0oldN)))*v0N ) // linear form
+	+ int1d(T0hN,inside)(lambda*v0N); // boundary condition	
+
+for(int m=0; m<48;++m){
+	Poisson0D;
+	Poisson0N;
+	lambda = lambda - (u0D-u0N)/2;
+	plot(u0N,u0D,wait=true,value=true);
+	V0hD ERRD = u0D-u0oldD; V0hN ERRN = u0N-u0oldN;
+	real L2error0 = sqrt( int2d(T0hD)( ERRD^2 ) + int2d(T0hN)( ERRN^2 ));
+	real H1error0 = sqrt( int2d(T0hD)( dx(ERRD)^2 + dy(ERRD)^2 + ERRD^2 ) + int2d(T0hN)( dx(ERRN)^2 + dy(ERRN)^2 + ERRN^2 ) );
+	cout <<"step: "<< m <<" L2 error: "<< L2error0 <<" relative L2error: "<< L2error0/sqrt( (int2d(T0hD)(u0D^2)) + (int2d(T0hN)(u0N^2)) )<<endl;
+	cout <<"step: "<< m <<" H1 error: "<< H1error0 <<" relative H1error: "<< H1error0/sqrt( (int2d(T0hD)(dx(u0D)^2 + dy(u0D)^2 + u0D^2)) + (int2d(T0hN)(dx(u0N)^2 + dy(u0N)^2 + u0N^2)) )<<endl;
+	u0oldD=u0D;
+	u0oldN=u0N;
+	}	
+
+plot(u0D,u0N,wait=true,value=true);
